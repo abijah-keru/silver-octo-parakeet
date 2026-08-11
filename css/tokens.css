@@ -1,0 +1,37 @@
+:root {
+    /* Colors - Clinical Calm */
+    --color-primary: #3182CE;
+    --color-primary-hover: #2B6CB0;
+    --color-background: #F9FAFB; /* Softer, warmer gray */
+    --color-surface: #FFFFFF;
+    --color-border: #E5E7EB; /* Softer, less obtrusive borders */
+
+    /* Text Colors */
+    --color-text-primary: #111827; /* Rich, highly legible dark text */
+    --color-text-secondary: #6B7280;
+    --color-text-disabled: #9CA3AF;
+
+    /* Semantic Colors (For UI states only, never medical severity) */
+    --color-success: #38A169;
+    --color-success-bg: #F0FFF4;
+    --color-error: #E53E3E;
+    --color-error-bg: #FFF5F5;
+
+    /* Spacing (8-point grid system) */
+    --space-xs: 4px;
+    --space-s: 8px;
+    --space-m: 16px;
+    --space-l: 24px;
+    --space-xl: 32px;
+    --space-xxl: 48px;
+
+    /* Corner Radius - Soft and modern */
+    --radius-sm: 8px;   /* Chips, small elements */
+    --radius-md: 12px;  /* Buttons, inputs */
+    --radius-lg: 20px;  /* Cards, sheets */
+    --radius-pill: 999px; /* Badges, avatars */
+
+    /* Elevation - Premium, pillowy shadows */
+    --shadow-level-1: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    --shadow-level-2: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+}

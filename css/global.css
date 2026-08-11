@@ -1,0 +1,72 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.01em; 
+}
+
+/* Typography Rules: Sentence Case, Left Aligned */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--color-text-primary);
+    font-weight: 600;
+    text-transform: none; 
+}
+
+h1 { font-size: 1.5rem; margin-bottom: var(--space-m); }
+h2 { font-size: 1.25rem; margin-bottom: var(--space-m); }
+h3 { font-size: 1.1rem; margin-bottom: var(--space-s); }
+
+p { margin-bottom: var(--space-m); }
+
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+/* Typography Utilities */
+.text-muted { color: var(--color-text-secondary); }
+.text-sm { font-size: 0.875rem; }
+.text-center { text-align: center; }
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+
+.section-title {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    font-weight: 600;
+    margin-bottom: var(--space-s);
+}
+
+/* =========================================
+   ACCESSIBILITY: Keyboard Navigation (5.5)
+========================================= */
+:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+a.card:focus-visible {
+    outline-offset: 4px;
+}
+
+/* =========================================
+   ACCESSIBILITY: Reduce Motion (5.8)
+========================================= */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

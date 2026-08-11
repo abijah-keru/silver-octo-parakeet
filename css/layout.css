@@ -1,0 +1,83 @@
+#app-shell {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-width: 768px; 
+    margin: 0 auto;
+    background: var(--color-background);
+}
+
+#app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-m);
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+#header-title {
+    font-size: 1.25rem;
+    margin: 0;
+    font-weight: 600;
+}
+
+#app-root {
+    flex: 1;
+    padding: var(--space-m);
+    padding-bottom: 100px; 
+}
+
+#bottom-nav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: var(--space-s) 0;
+    padding-bottom: calc(var(--space-s) + env(safe-area-inset-bottom));
+    z-index: 100;
+    max-width: 768px;
+    margin: 0 auto;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    font-size: 0.75rem;
+    padding: var(--space-xs) var(--space-s);
+    border-radius: var(--radius-sm);
+    min-height: 48px; /* ACCESSIBILITY: Touch target */
+    min-width: 48px;
+}
+
+.nav-item.active {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+/* Flexbox Layout Utilities */
+.flex-row { display: flex; align-items: center; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.flex-col { display: flex; flex-direction: column; }
+
+/* Spacing Utilities */
+.gap-xs { gap: var(--space-xs); }
+.gap-sm { gap: var(--space-s); }
+.gap-md { gap: var(--space-m); }
+.mb-xs { margin-bottom: var(--space-xs); }
+.mb-sm { margin-bottom: var(--space-s); }
+.mb-md { margin-bottom: var(--space-m); }
+.mt-sm { margin-top: var(--space-s); }
+.mt-md { margin-top: var(--space-m); }
