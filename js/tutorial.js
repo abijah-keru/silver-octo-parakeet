@@ -1,10 +1,10 @@
 // js/tutorial.js
 
 export function runWalkthrough() {
-    // SECURITY LOCK: Check if the flag is set. If not, stop immediately.
+    // SECURITY LOCK ENABLED: Only run if the flag was set during onboarding
     if (localStorage.getItem('showWalkthrough') !== 'true') return;
     
-    // Remove the flag so it NEVER runs again unless they reset their profile
+    // Remove the flag immediately so it NEVER runs again
     localStorage.removeItem('showWalkthrough');
 
     if (!document.getElementById('tutorial-styles')) {
@@ -18,28 +18,41 @@ export function runWalkthrough() {
                 border-radius: var(--radius-sm);
                 pointer-events: none;
             }
-            @keyframes bounceDown {
-                0%, 100% { transform: translateY(0); }
-                50% { transform: translateY(8px); }
+            @keyframes pointDown {
+                0%, 100% { transform: translateY(0) rotate(180deg); }
+                50% { transform: translateY(8px) rotate(180deg); }
             }
-            @keyframes bounceUp {
-                0%, 100% { transform: translateY(0); }
-                50% { transform: translateY(-8px); }
+            @keyframes pointUp {
+                0%, 100% { transform: translateY(0) rotate(0deg); }
+                50% { transform: translateY(-8px) rotate(0deg); }
             }
             .finger-pointer {
                 position: fixed;
                 z-index: 10002;
-                color: var(--color-primary);
                 pointer-events: none;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
+                transition: opacity 0.15s ease;
+            }
+            .tutorial-tooltip {
+                position: fixed; 
+                z-index: 10002; 
+                background: var(--color-surface); 
+                padding: var(--space-m); 
+                border-radius: var(--radius-md); 
+                left: 16px; 
+                right: 16px; 
+                width: auto; 
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); 
+                transition: opacity 0.15s ease;
             }
         `;
         document.head.appendChild(style);
     }
 
-    // THE COMPLETE 8-STEP CHRONOLOGICAL FLOW
+    const blueHandSVG = `<svg viewBox="0 0 24 24" width="40" height="40" fill="var(--color-primary)" stroke="white" stroke-width="1.5"><path d="M14 9V5a2 2 0 0 0-4 0v11L7.5 13.5a2.12 2.12 0 0 0-3 3l5.5 5.5a6.36 6.36 0 0 0 4.5 1.87h2a6 6 0 0 0 6-6v-5.5a2 2 0 0 0-2-2h-1.54V9a2 2 0 0 0-4 0Z"/></svg>`;
+
     const steps = [
         { 
             isIntro: true, 
@@ -90,11 +103,12 @@ export function runWalkthrough() {
     document.body.appendChild(overlay);
 
     const tooltip = document.createElement('div');
-    tooltip.style.cssText = 'position: fixed; z-index: 10002; background: var(--color-surface); padding: var(--space-m); border-radius: var(--radius-md); width: 320px; max-width: 90vw; box-shadow: var(--shadow-level-2); transition: all 0.3s ease;';
+    tooltip.className = 'tutorial-tooltip';
     document.body.appendChild(tooltip);
 
     const pointer = document.createElement('div');
     pointer.className = 'finger-pointer';
+    pointer.innerHTML = blueHandSVG;
     document.body.appendChild(pointer);
 
     function showStep(index) {
@@ -107,12 +121,19 @@ export function runWalkthrough() {
 
         const step = steps[index];
 
+        tooltip.style.opacity = '0';
+        pointer.style.opacity = '0';
+
         if (step.isIntro) {
             pointer.style.display = 'none';
-            tooltip.style.left = '50%';
+            
             tooltip.style.top = '50%';
             tooltip.style.bottom = 'auto';
-            tooltip.style.transform = 'translate(-50%, -50%)';
+            tooltip.style.transform = 'translateY(-50%)';
+            
+            renderTooltipContent(step, index);
+            setTimeout(() => { tooltip.style.opacity = '1'; }, 50);
+
         } else {
             pointer.style.display = 'flex';
             tooltip.style.transform = 'none'; 
@@ -121,41 +142,45 @@ export function runWalkthrough() {
 
             if (targetElement) {
                 targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                
                 targetElement.classList.add('tutorial-highlight');
                 
                 setTimeout(() => {
                     const rect = targetElement.getBoundingClientRect();
                     const isTopHalf = rect.top < (window.innerHeight / 2);
 
-                    let tooltipLeft = rect.left + (rect.width / 2) - 160; 
-                    if (tooltipLeft < 16) tooltipLeft = 16;
-                    if (tooltipLeft + 320 > window.innerWidth - 16) tooltipLeft = window.innerWidth - 336;
-                    tooltip.style.left = `${tooltipLeft}px`;
+                    pointer.style.left = `${rect.left + (rect.width / 2) - 20}px`;
 
                     if (isTopHalf) {
-                        pointer.innerHTML = '<i data-lucide="hand" style="width: 32px; height: 32px; fill: var(--color-primary); transform: rotate(0deg);"></i>';
-                        pointer.style.animation = 'bounceUp 1.5s infinite ease-in-out';
-                        pointer.style.left = `${rect.left + (rect.width / 2) - 16}px`;
-                        pointer.style.top = `${rect.bottom + 8}px`;
+                        pointer.style.animation = 'pointUp 1.5s infinite ease-in-out';
+                        pointer.style.top = `${rect.bottom + 12}px`;
                         pointer.style.bottom = 'auto';
 
-                        tooltip.style.top = `${rect.bottom + 60}px`;
+                        // FIX: Ensure tooltip doesn't bleed off the bottom of the screen
+                        let calculatedTop = rect.bottom + 70;
+                        let maxAllowedTop = window.innerHeight - 200; 
+                        tooltip.style.top = `${Math.min(calculatedTop, maxAllowedTop)}px`;
                         tooltip.style.bottom = 'auto';
                     } else {
-                        pointer.innerHTML = '<i data-lucide="hand" style="width: 32px; height: 32px; fill: var(--color-primary); transform: rotate(180deg);"></i>';
-                        pointer.style.animation = 'bounceDown 1.5s infinite ease-in-out';
-                        pointer.style.left = `${rect.left + (rect.width / 2) - 16}px`;
-                        pointer.style.bottom = `${window.innerHeight - rect.top + 8}px`;
+                        pointer.style.animation = 'pointDown 1.5s infinite ease-in-out';
+                        pointer.style.bottom = `${window.innerHeight - rect.top + 8}px`; 
                         pointer.style.top = 'auto';
 
                         tooltip.style.bottom = `${window.innerHeight - rect.top + 60}px`;
                         tooltip.style.top = 'auto';
                     }
-                }, 300); 
+
+                    renderTooltipContent(step, index);
+                    
+                    tooltip.style.opacity = '1';
+                    pointer.style.opacity = '1';
+                }, 150); 
+            } else {
+                showStep(index + 1);
             }
         }
+    }
 
+    function renderTooltipContent(step, index) {
         tooltip.innerHTML = `
             <div style="margin-bottom: 16px; ${step.isIntro ? 'text-align: center;' : ''}">
                 <h3 style="margin: 0 0 8px 0; font-size: 1.1rem; color: var(--color-primary); display: flex; align-items: center; gap: 8px; ${step.isIntro ? 'justify-content: center;' : ''}">
@@ -171,11 +196,7 @@ export function runWalkthrough() {
                 </div>
             </div>
         `;
-
-        if (window.lucide) {
-            window.lucide.createIcons();
-        }
-
+        
         setTimeout(() => {
             document.getElementById('walkthrough-next').onclick = () => showStep(index + 1);
             document.getElementById('walkthrough-skip').onclick = closeWalkthrough;
@@ -189,5 +210,5 @@ export function runWalkthrough() {
         pointer.remove();
     }
 
-    setTimeout(() => showStep(0), 150);
+    setTimeout(() => showStep(0), 100);
 }

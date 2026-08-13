@@ -18,26 +18,17 @@
     <link rel="stylesheet" href="css/global.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/print.css" media="print">
 </head>
 <body>
 
     <div id="app-shell">
         
-        <header id="app-header">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <img src="assets/logo.png" alt="" style="height: 40px; width: auto; border-radius: 4px;">
-                <h1 id="header-title" style="margin: 0; text-transform: capitalize; font-size: 1.25rem;">Home</h1>
-            </div>
-            
-            <div style="display: flex; gap: 8px; color: var(--color-text-secondary);">
-                <button aria-label="Search Records" style="background: none; border: none; cursor: pointer; color: inherit; min-height: 48px; min-width: 48px; display: flex; align-items: center; justify-content: center;" onclick="location.hash='#/search'">
-                    <i data-lucide="search" style="width: 22px; height: 22px;"></i>
-                </button>
-                <button aria-label="View Patient Profile" style="background: none; border: none; cursor: pointer; color: inherit; min-height: 48px; min-width: 48px; display: flex; align-items: center; justify-content: center;" onclick="location.hash='#/profile'">
-                    <i data-lucide="user" style="width: 22px; height: 22px;"></i>
-                </button>
-            </div>
-        </header>
+       <!-- Global Header -->
+    <!-- Global Header (Cleaned up, no extra SVGs) -->
+    <header id="app-header" style="display: flex; align-items: center; justify-content: center; padding: 16px 20px; background: var(--color-surface); position: relative; z-index: 100;">
+        <div id="header-title" style="font-weight: 600; font-size: 1.1rem; color: var(--color-text-primary);"></div>
+    </header>
 
         <main id="app-root"></main>
 

@@ -1,0 +1,52 @@
+/* =========================================
+   PRINT STYLES (PDF Generation)
+   ========================================= */
+@media print {
+    /* 1. Hide all App UI elements (Nav bar, header, buttons) */
+    nav, 
+    header,
+    button,
+    .btn-quick {
+        display: none !important;
+    }
+
+    /* 2. Remove the mobile "App Shell" constraints */
+    body, 
+    #app-root, 
+    .app-shell,
+    main {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+        box-shadow: none !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    /* 3. Transform UI "Cards" into flat document sections */
+    .card {
+        box-shadow: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        margin-bottom: 32px !important;
+        background: transparent !important;
+        page-break-inside: avoid; /* Prevents a section from being cut in half across two pages */
+    }
+
+    /* 4. Ensure high contrast for printing */
+    body, p, span, div {
+        color: #000 !important; 
+    }
+    
+    .text-muted {
+        color: #4a5568 !important; /* Darker gray for readability on paper */
+    }
+
+    /* 5. Hide the browser's default header/footer URLs */
+    @page {
+        margin: 2cm; /* Standard document margins */
+    }
+}

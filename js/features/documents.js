@@ -1,5 +1,7 @@
 // js/features/documents.js
 import { getDocuments, saveDocument, getDocumentById } from '../database.js';
+import { processMedicalDocument } from './extraction.js';
+import { renderStagingArea } from './staging.js';
 
 export async function renderDocuments() {
     document.getElementById('header-title').textContent = 'DOCUMENTS';
@@ -106,10 +108,21 @@ function renderDocumentDetails(root, doc) {
                 ${doc.notes ? `<div class="list-item" style="flex-direction: column; align-items: flex-start; border-bottom: none;"><span class="text-muted mb-sm">Notes</span> <span style="line-height: 1.5;">${doc.notes}</span></div>` : ''}
             </div>
         </div>
-        <div class="card mb-sm text-center" style="background: #F7FAFC; border: 1px dashed #CBD5E0;">
-            <p class="text-sm text-muted mb-sm">OCR Extraction (Optional)</p>
-            <button class="btn-quick" disabled style="opacity: 0.5;">Extract Text (AI Coming Soon)</button>
+        
+        <!-- NEW AI EXTRACTION UI -->
+        <div class="card mb-sm" style="background: #F7FAFC; border: 1px dashed #CBD5E0; text-align: center;">
+            <p class="text-sm text-muted mb-sm">AI Document Extraction</p>
+            <button id="btn-extract-ai" style="width: 100%; padding: 12px; background: #EBF8FF; color: #2B6CB0; border: 1px solid #BEE3F8; border-radius: 4px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;">
+                ✨ Extract Data with AI
+            </button>
+            <div id="ai-loading-indicator" style="display: none; margin-top: 16px; color: #4A5568;">
+                <span class="text-sm">Analyzing document structure... Please wait.</span>
+            </div>
         </div>
+        
+        <!-- CONTAINER FOR STAGING AREA -->
+        <div id="staging-container"></div>
+
         <div style="display: flex; gap: 8px; margin-top: 16px;">
             <button id="btn-delete-doc" style="flex: 1; padding: 12px; background: #FFF5F5; color: #E53E3E; border: 1px solid #FEB2B2; border-radius: 4px; font-weight: 600; cursor: pointer;">Delete Document</button>
         </div>
@@ -118,6 +131,40 @@ function renderDocumentDetails(root, doc) {
         </div>
     `;
 
+    // AI Extraction Event Listener
+    document.getElementById('btn-extract-ai').addEventListener('click', async (e) => {
+        const btn = e.target;
+        const loadingIndicator = document.getElementById('ai-loading-indicator');
+        const stagingContainer = document.getElementById('staging-container');
+
+        // Disable button and show loading state
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        loadingIndicator.style.display = 'block';
+        stagingContainer.innerHTML = ''; // Clear previous
+
+        try {
+            // Call the Cloudflare Bridge!
+            const extractedData = await processMedicalDocument(doc.fileData);
+
+            if (extractedData) {
+                // Hide button, render Staging Area
+                btn.style.display = 'none';
+                loadingIndicator.style.display = 'none';
+                renderStagingArea(stagingContainer, extractedData, doc.id);
+            } else {
+                throw new Error("No data returned");
+            }
+        } catch (error) {
+            console.error("Extraction failed:", error);
+            alert("Failed to extract data. Please try again.");
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            loadingIndicator.style.display = 'none';
+        }
+    });
+
+    // Delete Document Listener
     document.getElementById('btn-delete-doc').addEventListener('click', async () => {
         if(confirm('Delete this original document? Linked records will flag the document as unavailable.')) {
             doc.isDeleted = true;
@@ -207,7 +254,6 @@ function renderUploadForm(root) {
         const formData = new FormData(e.target);
         const docData = Object.fromEntries(formData.entries());
 
-        // File Reader logic to convert the physical file to a Base64 string for local DB storage
         const reader = new FileReader();
         reader.onload = async function(event) {
             const base64String = event.target.result;
@@ -218,8 +264,6 @@ function renderUploadForm(root) {
 
             try {
                 await saveDocument(docData);
-                
-                // Show Blueprint 15 Success Screen logic (We use toast + redirect to Library for fluid UX)
                 sessionStorage.setItem('docToastMessage', '✓ Document Uploaded Successfully');
                 window.location.hash = '#/documents'; 
             } catch (error) {
@@ -230,7 +274,6 @@ function renderUploadForm(root) {
             }
         };
 
-        // If it's a massive file, this prevents the browser from crashing
         reader.onerror = function() {
             alert("Error reading file.");
             btnSave.disabled = false;

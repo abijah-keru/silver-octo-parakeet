@@ -1,5 +1,5 @@
 // js/features/summary.js
-import { getProfile, getRecords, getCurrentHealth } from '../database.js';
+import { getProfile, getRecords, getCurrentHealth, getDocuments } from '../database.js';
 
 // Helper to calculate age
 function calculateAge(dobString) {
@@ -67,6 +67,10 @@ function renderConfigView(root) {
                     <label class="list-item" style="cursor: pointer; display: flex; align-items: center; gap: 12px;">
                         <input type="checkbox" name="includeHistory" checked> Medical History
                     </label>
+                    <!-- NEW: Document Briefs Checkbox -->
+                    <label class="list-item" style="cursor: pointer; display: flex; align-items: center; gap: 12px;">
+                        <input type="checkbox" name="includeDocs" checked> Clinical Document Briefs
+                    </label>
                     <label class="list-item" style="cursor: pointer; display: flex; align-items: center; gap: 12px; border-bottom: none;">
                         <input type="checkbox" name="includeMeasurements" checked> Measurements
                     </label>
@@ -86,6 +90,7 @@ function renderConfigView(root) {
             practitioner: formData.get('practitioner'),
             includeHealth: formData.get('includeHealth') !== null,
             includeHistory: formData.get('includeHistory') !== null,
+            includeDocs: formData.get('includeDocs') !== null, // Capture new option
             includeMeasurements: formData.get('includeMeasurements') !== null
         };
         await renderGeneratedView(root, options);
@@ -98,6 +103,7 @@ async function renderGeneratedView(root, options) {
     const profile = await getProfile();
     const health = await getCurrentHealth();
     const records = await getRecords();
+    const documents = await getDocuments(); // Fetch documents
 
     const age = calculateAge(profile.dob);
     
@@ -128,7 +134,6 @@ async function renderGeneratedView(root, options) {
         html += `<div class="card mb-sm">
                     <h3 class="mb-sm" style="color: var(--color-primary); border-bottom: 1px solid #E2E8F0; padding-bottom: 8px;">Current Health</h3>`;
         
-        // Allergies
         if (health.allergies && health.allergies.length > 0) {
             html += `<div class="text-sm text-muted mb-sm" style="font-weight: 600; text-transform: uppercase;">Allergies</div>`;
             health.allergies.forEach(a => {
@@ -138,7 +143,6 @@ async function renderGeneratedView(root, options) {
             missingData.push("No allergy information recorded.");
         }
 
-        // Conditions
         if (health.conditions && health.conditions.length > 0) {
             html += `<div class="text-sm text-muted mb-sm mt-sm" style="font-weight: 600; text-transform: uppercase;">Active Conditions</div>`;
             health.conditions.forEach(c => {
@@ -148,7 +152,6 @@ async function renderGeneratedView(root, options) {
             missingData.push("No chronic conditions recorded.");
         }
 
-        // Medications
         if (health.medications && health.medications.length > 0) {
             html += `<div class="text-sm text-muted mb-sm mt-sm" style="font-weight: 600; text-transform: uppercase;">Active Medications</div>`;
             health.medications.forEach(m => {
@@ -169,7 +172,7 @@ async function renderGeneratedView(root, options) {
                     <h3 class="mb-sm" style="color: var(--color-primary); border-bottom: 1px solid #E2E8F0; padding-bottom: 8px;">Recent Medical History</h3>`;
         
         if (historyRecords.length > 0) {
-            historyRecords.slice(0, 5).forEach(r => { // Show last 5
+            historyRecords.slice(0, 5).forEach(r => { 
                 html += `
                     <div style="margin-bottom: 12px;">
                         <div style="font-weight: 600;">${r.title || r.type}</div>
@@ -185,7 +188,46 @@ async function renderGeneratedView(root, options) {
         html += `</div>`;
     }
 
-    // 4. MEASUREMENTS
+    // 4. NEW: CLINICAL DOCUMENT BRIEFS TIMELINE
+    if (options.includeDocs) {
+        const activeDocs = documents.filter(doc => !doc.isDeleted).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        html += `<div class="card mb-sm">
+                    <h3 class="mb-sm" style="color: var(--color-primary); border-bottom: 1px solid #E2E8F0; padding-bottom: 8px;">Clinical Document Briefs</h3>`;
+        
+        if (activeDocs.length > 0) {
+            html += `<div style="position: relative; padding-left: 16px; border-left: 2px solid #E2E8F0; margin-left: 8px; margin-top: 16px;">`;
+            
+            activeDocs.forEach(doc => {
+                const dateStr = new Date(doc.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+                const summaryText = doc.aiSummary || "No AI brief generated. Extract data in the Documents tab.";
+                
+                html += `
+                    <div style="margin-bottom: 24px; position: relative;">
+                        <!-- Timeline Dot -->
+                        <div style="position: absolute; left: -21px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: var(--color-primary); border: 2px solid white;"></div>
+                        
+                        <div class="text-sm text-muted" style="margin-bottom: 4px; font-weight: 500;">${dateStr}</div>
+                        <div style="font-weight: 600; color: #2D3748; margin-bottom: 6px;">${doc.title || doc.documentType}</div>
+                        
+                        <!-- The AI One-Liner Display -->
+                        <div style="font-size: 0.95rem; color: #4A5568; line-height: 1.5; background: #F7FAFC; padding: 12px; border-radius: 6px; border: 1px solid #E2E8F0;">
+                            ${summaryText}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+        } else {
+            html += `<div class="text-sm text-muted">No documents available.</div>`;
+            missingData.push("No clinical documents uploaded.");
+        }
+        
+        html += `</div>`;
+    }
+
+    // 5. MEASUREMENTS
     if (options.includeMeasurements) {
         const measurements = records.filter(r => r.type === 'Measurement');
         const latestBP = measurements.find(m => m.title === 'Blood Pressure');
@@ -206,7 +248,7 @@ async function renderGeneratedView(root, options) {
         html += `</div>`;
     }
 
-    // 5. DATA GAPS
+    // 6. DATA GAPS
     if (missingData.length > 0) {
         html += `
             <div class="card mb-sm" style="background: #FFF5F5; border: 1px solid #FEB2B2;">

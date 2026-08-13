@@ -198,7 +198,6 @@ async function renderRecordForm(root, existingData = {}) {
                     <textarea name="notes" rows="3" placeholder="Add any additional context..." style="width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #E2E8F0; border-radius: 4px;"></textarea>
                 </div>
 
-                <!-- RELATIONAL M:N DOCUMENT CHECKLIST -->
                 <div class="mb-sm mt-sm" style="border-top: 1px solid #E2E8F0; padding-top: 16px;">
                     <label class="text-sm text-muted mb-sm" style="display: block;">Link Supporting Documents (Optional)</label>
                     <div id="document-checklist" style="max-height: 150px; overflow-y: auto; background: #F7FAFC; border: 1px solid #E2E8F0; border-radius: 4px; padding: 8px;">
@@ -215,7 +214,6 @@ async function renderRecordForm(root, existingData = {}) {
         </div>
     `;
 
-    // Populate Document Library checklist checkboxes
     const docs = await getDocuments();
     const checklist = document.getElementById('document-checklist');
     if (docs.length === 0) {
@@ -400,7 +398,6 @@ async function renderRecordForm(root, existingData = {}) {
                             <input type="text" name="unit" id="meas-unit" placeholder="e.g. mmHg" required style="width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #E2E8F0; border-radius: 4px;">
                         </div>
                     </div>
-                    <!-- NEW: Linked Visit Field -->
                     <div class="mb-sm">
                         <label class="text-sm text-muted">Linked Medical Visit (Optional)</label>
                         <input type="text" name="linkedVisit" placeholder="e.g. Annual Checkup with Dr. Smith" style="width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #E2E8F0; border-radius: 4px;">
@@ -481,7 +478,6 @@ async function renderRecordForm(root, existingData = {}) {
 
     typeSelect.addEventListener('change', (e) => renderDynamicFields(e.target.value));
 
-    // If Editing, Pre-fill Data. Otherwise, check for query parameters (e.g. from Trends)
     if (isEdit) {
         typeSelect.value = existingData.type;
         renderDynamicFields(existingData.type);
@@ -491,15 +487,27 @@ async function renderRecordForm(root, existingData = {}) {
             if (input) input.value = value;
         }
     } else {
+        // AUTO-POPULATE LOGIC (Grabs 'type' and 'title' from the URL)
         const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
         const passedType = urlParams.get('type');
+        const passedTitle = urlParams.get('title');
+
         if (passedType) {
             typeSelect.value = passedType;
             renderDynamicFields(passedType);
+
+            // If it's a measurement and a title was passed (like "Blood Pressure"), auto-select it!
+            if (passedType === 'Measurement' && passedTitle) {
+                const measTypeSelect = document.getElementById('meas-type-select');
+                if (measTypeSelect) {
+                    measTypeSelect.value = passedTitle;
+                    // Trigger the change event so the placeholder and unit automatically lock in
+                    measTypeSelect.dispatchEvent(new Event('change'));
+                }
+            }
         }
     }
 
-    // Handle form submission and bidirectional M:N link generation
     document.getElementById('record-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btnSave = document.getElementById('btn-save-record');
@@ -509,13 +517,11 @@ async function renderRecordForm(root, existingData = {}) {
         const formData = new FormData(e.target);
         const recordData = Object.fromEntries(formData.entries());
         
-        // Grab all checked document IDs from the M:N relationship checklist
         recordData.linkedDocumentIds = formData.getAll('linkedDocumentIds');
 
         try {
             await saveRecord(recordData);
             
-            // Loop through checked IDs and establish the 2-way database relationship
             for (const docId of recordData.linkedDocumentIds) {
                 await linkDocumentAndRecord(docId, recordData.id);
             }
