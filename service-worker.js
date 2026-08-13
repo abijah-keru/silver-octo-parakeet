@@ -1,4 +1,4 @@
-const CACHE_NAME = 'phr-cache-v1';
+const CACHE_NAME = 'phr-cache-v2';
 
 // List of all the files we want to save to the phone for offline use
 const urlsToCache = [
